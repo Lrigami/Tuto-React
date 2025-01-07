@@ -6,13 +6,31 @@ export default function Board() {
   // déclaration d'une variable d'état nommée squares qui contient par défaut un tableau de 9 null correspondant aux neuf cases. Array(9).fill(null) crée un tableau de neuf éléments puis les définit tous à null. L'appel useState() qui l'enrobe déclare une variable d'état squares qui vaut initialement ce tableau.
   const [squares, setSquares] = useState(Array(9).fill(null));
 
+  const [xIsNext, setXIsNext] = useState(true);
+
   function handleClick(i) {
+    // Pour ne pas qu'un O puisse écraser un X ou inversement, on vérifie que la valeur de la cellule ne soit pas égale à null. Si elle est remplit alors on arrête la fonction en avance.
+    if (squares[i]) {
+      return;
+    }
+
     const nextSquares = squares.slice(); // Crée une copie du tableau squares (nextSquares) grâce à slice()
-    nextSquares[i] = "X"; // met à jour le tableau nextSquares pour ajouter un X à la première case (index [0])
+
+    // nextSquares[i] = "X"; --- met à jour le tableau nextSquares pour ajouter un X à la première case (index [i])
+
+    // Si c'est au tour de X, la cellule se remplira d'un X, sinon d'un O.
+    if (xIsNext) {
+      nextSquares[i] = "X";
+    } else {
+      nextSquares[i] = "O";
+    }
+
     setSquares(nextSquares); // On appelle alors la fonction setSquares pour avertir React que l'état du composant a changé. Cela déclenchera un nouvel affichage des composants qui utilisent l'état squares (donc Board), ainsi que de tous leurs comportants enfants (les composants Square qui consituent le plateau);
 
     // Pourquoi créer une copie du tableau avec slice() ? Car l'immutabilité a plusieurs avantages. Elle facilite l'implémentation de fonctionnalités complexes. Par exemple, en évitant de modifier les données directement, il est aisé de conserver leurs versions précédents intactes pour les réutiliser ultérieurement ou pour revenir en arrière.
     // De plus, par défaut, tous les composants enfants refont automatiquement leur rendu lorsque l'état du composant parent change. Cela inclut les composants enfants qui ne sont en pratique pas concernés par le changement. Même si le changement n'est pas forcément perceptible par l'utilisateur, on peut vouloir éviter le changement de parties qui ne changent pas pour des raisons de performances. L'immutabilité permet aux composants de comparer leurs données à un coût quasiment nul, pour détecter un changement.
+
+    setXIsNext(!xIsNext); // On inverse la valeur de xIsNext pour alterner X et O.
   }
 
   // Remarque : JavaScript utilise des fermetures lexicales, ce qui signifie qu'une fonction imbriquée (ex. handleClick) a accès aux variables et fonctions définies dans une fonction englobante (ex. Board). La fonction handleClick peut lire l'état squares et appeler la fonction setSquares parce que les deux sont définis dans la fonction Board.
