@@ -3,17 +3,20 @@ import { useState } from "react";
 // conventions : onSomething pour les props qui représentent des événements et handleSomething pour les fonctions qui gèrent ces événements. 
 
 export default function Game() {
-  const [xIsNext, setXIsNext] = useState(true);
   const [history, setHistory] = useState([Array(9).fill(null)]);
-  const currentSquares = history[history.length - 1];
+  const [currentMove, setCurrentMove] = useState(0);
+  const xIsNext = currentMove % 2 === 0;
+  const currentSquares = history[currentMove];
 
   function handlePlay(nextSquares) {
-    setHistory([...history, nextSquares]); // [...history, nextSquares] crée un nouveau tableau qui contient tous les éléments existants de history, suivis de nextSquares.
-    setXIsNext(!xIsNext);
+    const nextHistory = [...history.slice(0, currentMove + 1), nextSquares];
+    setHistory(nextHistory);
+    // setHistory([...history, nextSquares]); --- [...history, nextSquares] crée un nouveau tableau qui contient tous les éléments existants de history, suivis de nextSquares.
+    setCurrentMove(nextHistory.length - 1);
   }
 
   function jumpTo(nextMove) {
-    // TODO
+    setCurrentMove(nextMove);
   }
 
   // transformer history en éléments React représentant des boutons à l'écran et afficher une liste de boutons pour "revenir" à des coups passés. 
@@ -88,13 +91,14 @@ function Board({ xIsNext, squares, onPlay }) {
   const winner = calculateWinner(squares);
   let status;
   if (winner) {
-    status = winner + "a gagné";
+    status = winner + " a gagné";
   } else {
     status = "Prochain tour : " + (xIsNext ? "X" : "O");
   }
 
   return (
     <>
+      <div className="status">{status}</div>
       <div className="board-row">
         {/* Ici, () => handleClick(0) est une fonction fléchée, une syntaxe plus concise de définition de fonction. Quand on cliquera sur la case, le code après la flèchhe sera exécuté, appelant alors handleClick(0) */}
         <Square value={squares[0]} onSquareClick={() => handleClick(0)}/>
