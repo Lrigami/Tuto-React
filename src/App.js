@@ -10,7 +10,8 @@ export default function Board() {
 
   function handleClick(i) {
     // Pour ne pas qu'un O puisse écraser un X ou inversement, on vérifie que la valeur de la cellule ne soit pas égale à null. Si elle est remplit alors on arrête la fonction en avance.
-    if (squares[i]) {
+    // S'il y a un gagnant, on arrête la fonction également.
+    if (squares[i] || calculateWinner(squares)) {
       return;
     }
 
@@ -34,6 +35,14 @@ export default function Board() {
   }
 
   // Remarque : JavaScript utilise des fermetures lexicales, ce qui signifie qu'une fonction imbriquée (ex. handleClick) a accès aux variables et fonctions définies dans une fonction englobante (ex. Board). La fonction handleClick peut lire l'état squares et appeler la fonction setSquares parce que les deux sont définis dans la fonction Board.
+
+  const winner = calculateWinner(squares);
+  let status;
+  if (winner) {
+    status = winner + "a gagné";
+  } else {
+    status = "Prochain tour : " + (xIsNext ? "X" : "O");
+  }
 
   return (
     <>
@@ -67,4 +76,24 @@ function Square({value, onSquareClick}) {
 
   // Quand je clique sur le bouton : cela active onSquareClick qui active lui même handleClick(i) dans chaque Square défini dans Board. Voir commentaires dans la fonction handleClick pour les détails. Puis l'état squares du composant Board est mis à jour, du coup Board et tous ses enfants refont leur rendu. Cela modifie la prop value du composant Square d'index i pour la passer de null à X. 
   return <button className="square" onClick={onSquareClick}>{value}</button>;
+}
+
+function calculateWinner(squares) {
+  const lines = [
+    [0, 1, 2],
+    [3, 4, 5],
+    [6, 7, 8],
+    [0, 3, 6],
+    [1, 4, 7],
+    [2, 5, 8],
+    [2, 4, 6],
+    [0, 4, 8]
+  ];
+  for (let i = 0; i < lines.length; i++) {
+    const [a, b, c] = lines[i];
+    if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
+      return squares[a];
+    }
+  }
+  return null;
 }
