@@ -2,11 +2,31 @@ import { useState } from "react";
 
 // conventions : onSomething pour les props qui représentent des événements et handleSomething pour les fonctions qui gèrent ces événements. 
 
-export default function Board() {
-  // déclaration d'une variable d'état nommée squares qui contient par défaut un tableau de 9 null correspondant aux neuf cases. Array(9).fill(null) crée un tableau de neuf éléments puis les définit tous à null. L'appel useState() qui l'enrobe déclare une variable d'état squares qui vaut initialement ce tableau.
-  const [squares, setSquares] = useState(Array(9).fill(null));
-
+export default function Game() {
   const [xIsNext, setXIsNext] = useState(true);
+  const [history, setHistory] = useState([Array(9).fill(null)]);
+  const currentSquares = history[history.length - 1];
+
+  function handlePlay(nextSquares) {
+    setHistory([...history, nextSquares]); // [...history, nextSquares] crée un nouveau tableau qui contient tous les éléments existants de history, suivis de nextSquares.
+    setXIsNext(!xIsNext);
+  }
+
+  return (
+    <div className="game">
+      <div className="game-board">
+        <Board xIsNext={xIsNext} squares={currentSquares} onPlay={handlePlay}/>
+      </div>
+      <div className="game-info">
+        <ol>{/*TODO*/}</ol>
+      </div>
+    </div>
+  )
+}
+
+function Board({ xIsNext, squares, onPlay }) {
+  // déclaration d'une variable d'état nommée squares qui contient par défaut un tableau de 9 null correspondant aux neuf cases. Array(9).fill(null) crée un tableau de neuf éléments puis les définit tous à null. L'appel useState() qui l'enrobe déclare une variable d'état squares qui vaut initialement ce tableau.
+  // const [squares, setSquares] = useState(Array(9).fill(null));
 
   function handleClick(i) {
     // Pour ne pas qu'un O puisse écraser un X ou inversement, on vérifie que la valeur de la cellule ne soit pas égale à null. Si elle est remplit alors on arrête la fonction en avance.
@@ -26,12 +46,14 @@ export default function Board() {
       nextSquares[i] = "O";
     }
 
-    setSquares(nextSquares); // On appelle alors la fonction setSquares pour avertir React que l'état du composant a changé. Cela déclenchera un nouvel affichage des composants qui utilisent l'état squares (donc Board), ainsi que de tous leurs comportants enfants (les composants Square qui consituent le plateau);
+    // setSquares(nextSquares); --- On appelle alors la fonction setSquares pour avertir React que l'état du composant a changé. Cela déclenchera un nouvel affichage des composants qui utilisent l'état squares (donc Board), ainsi que de tous leurs comportants enfants (les composants Square qui consituent le plateau);
 
     // Pourquoi créer une copie du tableau avec slice() ? Car l'immutabilité a plusieurs avantages. Elle facilite l'implémentation de fonctionnalités complexes. Par exemple, en évitant de modifier les données directement, il est aisé de conserver leurs versions précédents intactes pour les réutiliser ultérieurement ou pour revenir en arrière.
     // De plus, par défaut, tous les composants enfants refont automatiquement leur rendu lorsque l'état du composant parent change. Cela inclut les composants enfants qui ne sont en pratique pas concernés par le changement. Même si le changement n'est pas forcément perceptible par l'utilisateur, on peut vouloir éviter le changement de parties qui ne changent pas pour des raisons de performances. L'immutabilité permet aux composants de comparer leurs données à un coût quasiment nul, pour détecter un changement.
 
-    setXIsNext(!xIsNext); // On inverse la valeur de xIsNext pour alterner X et O.
+    // setXIsNext(!xIsNext); --- On inverse la valeur de xIsNext pour alterner X et O.
+
+    onPlay(nextSquares); // On remplace ici les appels à setSquares et setXIsNext par un appel unique à onPlay pour que le composant Game puisse mettre à jour le Board lorsque l'utilisateur clique sur une case.
   }
 
   // Remarque : JavaScript utilise des fermetures lexicales, ce qui signifie qu'une fonction imbriquée (ex. handleClick) a accès aux variables et fonctions définies dans une fonction englobante (ex. Board). La fonction handleClick peut lire l'état squares et appeler la fonction setSquares parce que les deux sont définis dans la fonction Board.
