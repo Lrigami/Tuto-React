@@ -27,7 +27,7 @@ export default function Game() {
     }
     return (
       // Pour chaque coup de l'historique de la partie, on crée un élément de liste <li> qui contient un bouton <button> qui a un gestionnaire onClick qui appelle la fonction jumpTo.
-      <li>
+      <li key={move}>
         <button onClick={() => jumpTo(move)}>{description}</button>
       </li>
       // Quand la liste est ré-affichée, React prend la clé de chaque élément de liste et recherche l'élément de la liste précédente avec la même clé. S'il ne la trouve pas, React crée un composant. Si la liste à jour n'a pas une clé qui existait auparavant, React détruit l'ancien composant correspondant. Si deux clés correspondent, le composant correspondant est déplacé si besoin.
@@ -35,6 +35,7 @@ export default function Game() {
       // key est une propriété spéciale réservée par React. Lorsqu'un élément est créé, React extrait la propriété key et la stocke directement dans l'élément renvoyé. Même si key semble être passé comme une prop, React l'utilise automatiquement pour déterminer quel composant mettre à jour. Un composant n'a aucun moyen de demander la key que son parent a spécifié. 
       // Si aucune clé n'est spécifiée, React signalera une erreur et utilisera par défaut l'index dans le tableau comme clé. Recourir à l'index en tant que clé pose problème dès que l'on essaye de réordonner la liste ou d'y insérer ou retirer des éléments. Passer explicitement key={i} réduit certes l'erreur au silence, mais ne résout en rien le problème sous-jacent, et est donc une apporche généralement déconseillée. 
       // Les clés n'ont pas besoi d'être uniques au global ; elles doivent juste être uniques au sein de la liste concernée.
+      // Ici les coups ne peuvent pas être réordonnés, retirés ou insérés, donc il est possible d'utiliser l'index du coup comme key : <li key={move}>...</li>
     );
   });
 
