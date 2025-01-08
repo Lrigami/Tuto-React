@@ -3,15 +3,15 @@ import { useState, useEffect } from "react";
 // conventions : onSomething pour les props qui représentent des événements et handleSomething pour les fonctions qui gèrent ces événements. 
 
 export default function Game() {
-  const [history, setHistory] = useState([Array(9).fill(null)]);
+  const [history, setHistory] = useState([{ squares: Array(9).fill(null), index: null, value: null}]);
   const [currentMove, setCurrentMove] = useState(0);
   const xIsNext = currentMove % 2 === 0;
   const currentSquares = history[currentMove];
   const [sorting, setSorting] = useState(false);
 
   function handlePlay(nextSquares, clickedIndex, clickedValue) {
-    console.log(clickedIndex, clickedValue);
-    const nextHistory = [...history.slice(0, currentMove + 1), nextSquares];
+    const moveData = {squares: nextSquares, index: clickedIndex, value: clickedValue};
+    const nextHistory = [...history.slice(0, currentMove + 1), moveData];
     setHistory(nextHistory);
     // setHistory([...history, nextSquares]); --- [...history, nextSquares] crée un nouveau tableau qui contient tous les éléments existants de history, suivis de nextSquares.
     setCurrentMove(nextHistory.length - 1);
@@ -23,7 +23,8 @@ export default function Game() {
   }
 
   // transformer history en éléments React représentant des boutons à l'écran et afficher une liste de boutons pour "revenir" à des coups passés. 
-  const moves = history.map((squares, move) => {
+  const moves = history.map((entry, move) => {
+    const {squares, index, value} = entry;
     let description;
     // Lorque l'on itère sur le tableau history au sein de la fonction que l'on a passé à map, l'argument squares vaut tour à tour chaque élément de history, et l'argument move vaut tour à tour chaque index de l'historique : 0, 1, 2...
     if (move > 0) {
@@ -40,7 +41,7 @@ export default function Game() {
           // Pour chaque coup de l'historique de la partie, on crée un élément de liste <li> qui contient un bouton <button> qui a un gestionnaire onClick qui appelle la fonction jumpTo.
           <li key={move}>
             <button onClick={() => jumpTo(move)}>{description}</button>
-            <span>{} - {}</span>
+            <span>{index+1} - {value}</span>
           </li>
           // Quand la liste est ré-affichée, React prend la clé de chaque élément de liste et recherche l'élément de la liste précédente avec la même clé. S'il ne la trouve pas, React crée un composant. Si la liste à jour n'a pas une clé qui existait auparavant, React détruit l'ancien composant correspondant. Si deux clés correspondent, le composant correspondant est déplacé si besoin.
           // Les clés informent React sur l'identité de chaque composant, ce qui lui permet de maintenir l'état d'un rendu à l'autre. Si la clé d'un composant change, il sera détruit puis recréé avec un état réinitialisé. 
@@ -78,7 +79,7 @@ export default function Game() {
   return (
     <div className="game">
       <div className="game-board">
-        <Board xIsNext={xIsNext} squares={currentSquares} onPlay={handlePlay} winningSquares={winningSquares}/>
+        <Board xIsNext={xIsNext} squares={currentSquares.squares} onPlay={handlePlay} winningSquares={winningSquares}/>
       </div>
       <div className="game-info">
         <SortMoves onSortClick={sort}/>
