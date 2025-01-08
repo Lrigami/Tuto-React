@@ -28,18 +28,26 @@ export default function Game() {
     } else {
       description = "Revenir au début";
     }
-    return (
-      // Pour chaque coup de l'historique de la partie, on crée un élément de liste <li> qui contient un bouton <button> qui a un gestionnaire onClick qui appelle la fonction jumpTo.
-      <li key={move}>
-        <button onClick={() => jumpTo(move)}>{description}</button>
-      </li>
-      // Quand la liste est ré-affichée, React prend la clé de chaque élément de liste et recherche l'élément de la liste précédente avec la même clé. S'il ne la trouve pas, React crée un composant. Si la liste à jour n'a pas une clé qui existait auparavant, React détruit l'ancien composant correspondant. Si deux clés correspondent, le composant correspondant est déplacé si besoin.
-      // Les clés informent React sur l'identité de chaque composant, ce qui lui permet de maintenir l'état d'un rendu à l'autre. Si la clé d'un composant change, il sera détruit puis recréé avec un état réinitialisé. 
-      // key est une propriété spéciale réservée par React. Lorsqu'un élément est créé, React extrait la propriété key et la stocke directement dans l'élément renvoyé. Même si key semble être passé comme une prop, React l'utilise automatiquement pour déterminer quel composant mettre à jour. Un composant n'a aucun moyen de demander la key que son parent a spécifié. 
-      // Si aucune clé n'est spécifiée, React signalera une erreur et utilisera par défaut l'index dans le tableau comme clé. Recourir à l'index en tant que clé pose problème dès que l'on essaye de réordonner la liste ou d'y insérer ou retirer des éléments. Passer explicitement key={i} réduit certes l'erreur au silence, mais ne résout en rien le problème sous-jacent, et est donc une apporche généralement déconseillée. 
-      // Les clés n'ont pas besoi d'être uniques au global ; elles doivent juste être uniques au sein de la liste concernée.
-      // Ici les coups ne peuvent pas être réordonnés, retirés ou insérés, donc il est possible d'utiliser l'index du coup comme key : <li key={move}>...</li>
-    );
+
+    // Afficher simplement "Vous êtes au coup X" plutôt qu'un bouton lors du coup à jouer.
+    if (move == currentMove) {
+      return (
+        <li key={move}>Vous êtes au coup #{move}</li>
+      )
+    } else {
+      return (
+        // Pour chaque coup de l'historique de la partie, on crée un élément de liste <li> qui contient un bouton <button> qui a un gestionnaire onClick qui appelle la fonction jumpTo.
+        <li key={move}>
+          <button onClick={() => jumpTo(move)}>{description}</button>
+        </li>
+        // Quand la liste est ré-affichée, React prend la clé de chaque élément de liste et recherche l'élément de la liste précédente avec la même clé. S'il ne la trouve pas, React crée un composant. Si la liste à jour n'a pas une clé qui existait auparavant, React détruit l'ancien composant correspondant. Si deux clés correspondent, le composant correspondant est déplacé si besoin.
+        // Les clés informent React sur l'identité de chaque composant, ce qui lui permet de maintenir l'état d'un rendu à l'autre. Si la clé d'un composant change, il sera détruit puis recréé avec un état réinitialisé. 
+        // key est une propriété spéciale réservée par React. Lorsqu'un élément est créé, React extrait la propriété key et la stocke directement dans l'élément renvoyé. Même si key semble être passé comme une prop, React l'utilise automatiquement pour déterminer quel composant mettre à jour. Un composant n'a aucun moyen de demander la key que son parent a spécifié. 
+        // Si aucune clé n'est spécifiée, React signalera une erreur et utilisera par défaut l'index dans le tableau comme clé. Recourir à l'index en tant que clé pose problème dès que l'on essaye de réordonner la liste ou d'y insérer ou retirer des éléments. Passer explicitement key={i} réduit certes l'erreur au silence, mais ne résout en rien le problème sous-jacent, et est donc une apporche généralement déconseillée. 
+        // Les clés n'ont pas besoi d'être uniques au global ; elles doivent juste être uniques au sein de la liste concernée.
+        // Ici les coups ne peuvent pas être réordonnés, retirés ou insérés, donc il est possible d'utiliser l'index du coup comme key : <li key={move}>...</li>
+      );
+    }
   });
 
   return (
@@ -96,27 +104,52 @@ function Board({ xIsNext, squares, onPlay }) {
     status = "Prochain tour : " + (xIsNext ? "X" : "O");
   }
 
+  // Remanier Board pour qu'il utilise deux boucles au lieu de coder les rangées et cases du plateau en dur. Dans React, on ne manipule pas directement le DOM avec des fonctions comme document.createElement ou appendChild. A la place, on utilise JSX pour décrire la structure des composants de manière déclarative. Si on veut générer dynamiquement les lignes et les cases du plateau de jeu avec des boucles, on doit utiliser des tableaux et la méthode .map()
+  const board = [];
+  for (let i = 0; i < 3; i++) {
+    const row = (
+      <div key={i} className="board-row">
+        {Array(3)
+          .fill(null)
+          .map((_, j) => {
+            const index = i * 3 + j;
+            return (
+              <Square key={index} value={squares[index]} onSquareClick={() => handleClick(index)}/>
+            );
+          })}
+      </div>
+    );
+    board.push(row);
+  }
+
   return (
     <>
       <div className="status">{status}</div>
-      <div className="board-row">
-        {/* Ici, () => handleClick(0) est une fonction fléchée, une syntaxe plus concise de définition de fonction. Quand on cliquera sur la case, le code après la flèchhe sera exécuté, appelant alors handleClick(0) */}
-        <Square value={squares[0]} onSquareClick={() => handleClick(0)}/>
-        <Square value={squares[1]} onSquareClick={() => handleClick(1)}/>
-        <Square value={squares[2]} onSquareClick={() => handleClick(2)}/>
-      </div>
-      <div className="board-row">
-        <Square value={squares[3]} onSquareClick={() => handleClick(3)}/>
-        <Square value={squares[4]} onSquareClick={() => handleClick(4)}/>
-        <Square value={squares[5]} onSquareClick={() => handleClick(5)}/>
-      </div>
-      <div className="board-row">
-        <Square value={squares[6]} onSquareClick={() => handleClick(6)}/>
-        <Square value={squares[7]} onSquareClick={() => handleClick(7)}/>
-        <Square value={squares[8]} onSquareClick={() => handleClick(8)}/>
-      </div>
+      {board}
     </>
   );
+
+  // return (
+  //   <>
+  //     <div className="status">{status}</div>
+  //     <div className="board-row">
+  //       {/* Ici, () => handleClick(0) est une fonction fléchée, une syntaxe plus concise de définition de fonction. Quand on cliquera sur la case, le code après la flèchhe sera exécuté, appelant alors handleClick(0) */}
+  //       <Square value={squares[0]} onSquareClick={() => handleClick(0)}/>
+  //       <Square value={squares[1]} onSquareClick={() => handleClick(1)}/>
+  //       <Square value={squares[2]} onSquareClick={() => handleClick(2)}/>
+  //     </div>
+  //     <div className="board-row">
+  //       <Square value={squares[3]} onSquareClick={() => handleClick(3)}/>
+  //       <Square value={squares[4]} onSquareClick={() => handleClick(4)}/>
+  //       <Square value={squares[5]} onSquareClick={() => handleClick(5)}/>
+  //     </div>
+  //     <div className="board-row">
+  //       <Square value={squares[6]} onSquareClick={() => handleClick(6)}/>
+  //       <Square value={squares[7]} onSquareClick={() => handleClick(7)}/>
+  //       <Square value={squares[8]} onSquareClick={() => handleClick(8)}/>
+  //     </div>
+  //   </>
+  // );
 }
 
 function Square({value, onSquareClick}) {
