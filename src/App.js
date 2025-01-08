@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 // conventions : onSomething pour les props qui représentent des événements et handleSomething pour les fonctions qui gèrent ces événements. 
 
@@ -7,12 +7,14 @@ export default function Game() {
   const [currentMove, setCurrentMove] = useState(0);
   const xIsNext = currentMove % 2 === 0;
   const currentSquares = history[currentMove];
+  const [sorting, setSorting] = useState(false);
 
   function handlePlay(nextSquares) {
     const nextHistory = [...history.slice(0, currentMove + 1), nextSquares];
     setHistory(nextHistory);
     // setHistory([...history, nextSquares]); --- [...history, nextSquares] crée un nouveau tableau qui contient tous les éléments existants de history, suivis de nextSquares.
     setCurrentMove(nextHistory.length - 1);
+    setDisplayedMoves(moves);
   }
 
   function jumpTo(nextMove) {
@@ -22,7 +24,7 @@ export default function Game() {
   // transformer history en éléments React représentant des boutons à l'écran et afficher une liste de boutons pour "revenir" à des coups passés. 
   const moves = history.map((squares, move) => {
     let description;
-    // Lorque l'on itère sur le tableau history au sein de la fonction que l'on a passé à map, l'argument squares vaut tour à tour chaque élément de history, et l'argument move vaut tour à tout chaque index de l'historique : 0, 1, 2...
+    // Lorque l'on itère sur le tableau history au sein de la fonction que l'on a passé à map, l'argument squares vaut tour à tour chaque élément de history, et l'argument move vaut tour à tour chaque index de l'historique : 0, 1, 2...
     if (move > 0) {
       description = "Aller au coup #" + move;
     } else {
@@ -31,24 +33,42 @@ export default function Game() {
 
     // Afficher simplement "Vous êtes au coup X" plutôt qu'un bouton lors du coup à jouer.
     if (move == currentMove) {
-      return (
-        <li key={move}>Vous êtes au coup #{move}</li>
-      )
+      return <li key={move}>Vous êtes au coup #{move}</li>;
     } else {
       return (
-        // Pour chaque coup de l'historique de la partie, on crée un élément de liste <li> qui contient un bouton <button> qui a un gestionnaire onClick qui appelle la fonction jumpTo.
-        <li key={move}>
-          <button onClick={() => jumpTo(move)}>{description}</button>
-        </li>
-        // Quand la liste est ré-affichée, React prend la clé de chaque élément de liste et recherche l'élément de la liste précédente avec la même clé. S'il ne la trouve pas, React crée un composant. Si la liste à jour n'a pas une clé qui existait auparavant, React détruit l'ancien composant correspondant. Si deux clés correspondent, le composant correspondant est déplacé si besoin.
-        // Les clés informent React sur l'identité de chaque composant, ce qui lui permet de maintenir l'état d'un rendu à l'autre. Si la clé d'un composant change, il sera détruit puis recréé avec un état réinitialisé. 
-        // key est une propriété spéciale réservée par React. Lorsqu'un élément est créé, React extrait la propriété key et la stocke directement dans l'élément renvoyé. Même si key semble être passé comme une prop, React l'utilise automatiquement pour déterminer quel composant mettre à jour. Un composant n'a aucun moyen de demander la key que son parent a spécifié. 
-        // Si aucune clé n'est spécifiée, React signalera une erreur et utilisera par défaut l'index dans le tableau comme clé. Recourir à l'index en tant que clé pose problème dès que l'on essaye de réordonner la liste ou d'y insérer ou retirer des éléments. Passer explicitement key={i} réduit certes l'erreur au silence, mais ne résout en rien le problème sous-jacent, et est donc une apporche généralement déconseillée. 
-        // Les clés n'ont pas besoi d'être uniques au global ; elles doivent juste être uniques au sein de la liste concernée.
-        // Ici les coups ne peuvent pas être réordonnés, retirés ou insérés, donc il est possible d'utiliser l'index du coup comme key : <li key={move}>...</li>
-      );
+          // Pour chaque coup de l'historique de la partie, on crée un élément de liste <li> qui contient un bouton <button> qui a un gestionnaire onClick qui appelle la fonction jumpTo.
+          <li key={move}>
+            <button onClick={() => jumpTo(move)}>{description}</button>
+          </li>
+          // Quand la liste est ré-affichée, React prend la clé de chaque élément de liste et recherche l'élément de la liste précédente avec la même clé. S'il ne la trouve pas, React crée un composant. Si la liste à jour n'a pas une clé qui existait auparavant, React détruit l'ancien composant correspondant. Si deux clés correspondent, le composant correspondant est déplacé si besoin.
+          // Les clés informent React sur l'identité de chaque composant, ce qui lui permet de maintenir l'état d'un rendu à l'autre. Si la clé d'un composant change, il sera détruit puis recréé avec un état réinitialisé. 
+          // key est une propriété spéciale réservée par React. Lorsqu'un élément est créé, React extrait la propriété key et la stocke directement dans l'élément renvoyé. Même si key semble être passé comme une prop, React l'utilise automatiquement pour déterminer quel composant mettre à jour. Un composant n'a aucun moyen de demander la key que son parent a spécifié. 
+          // Si aucune clé n'est spécifiée, React signalera une erreur et utilisera par défaut l'index dans le tableau comme clé. Recourir à l'index en tant que clé pose problème dès que l'on essaye de réordonner la liste ou d'y insérer ou retirer des éléments. Passer explicitement key={i} réduit certes l'erreur au silence, mais ne résout en rien le problème sous-jacent, et est donc une apporche généralement déconseillée. 
+          // Les clés n'ont pas besoi d'être uniques au global ; elles doivent juste être uniques au sein de la liste concernée.
+          // Ici les coups ne peuvent pas être réordonnés, retirés ou insérés, donc il est possible d'utiliser l'index du coup comme key : <li key={move}>...</li>
+      )
     }
   });
+
+  const [displayedMoves, setDisplayedMoves] = useState(moves);
+
+  useEffect(() => {
+    setDisplayedMoves(moves);
+  }, [history, currentMove]);
+
+  function clearMoves() {
+    setDisplayedMoves(null);
+  }
+
+  function sort() {
+    if (sorting === false) {
+      moves.sort((a, b) => a.key - b.key);
+    } else {
+      moves.sort((a, b) => b.key - a.key);
+    }
+    setSorting(!sorting);
+    setDisplayedMoves(moves);
+  }
 
   return (
     <div className="game">
@@ -56,7 +76,9 @@ export default function Game() {
         <Board xIsNext={xIsNext} squares={currentSquares} onPlay={handlePlay}/>
       </div>
       <div className="game-info">
-        <ol>{moves}</ol>
+        <SortMoves onSortClick={sort}/>
+        <ClearMoves onClearClick={clearMoves}/>
+        <ol>{displayedMoves}</ol>
       </div>
     </div>
   )
@@ -162,6 +184,14 @@ function Square({value, onSquareClick}) {
 
   // Quand je clique sur le bouton : cela active onSquareClick qui active lui même handleClick(i) dans chaque Square défini dans Board. Voir commentaires dans la fonction handleClick pour les détails. Puis l'état squares du composant Board est mis à jour, du coup Board et tous ses enfants refont leur rendu. Cela modifie la prop value du composant Square d'index i pour la passer de null à X. 
   return <button className="square" onClick={onSquareClick}>{value}</button>;
+}
+
+function SortMoves({ onSortClick }) {
+  return <button onClick={onSortClick}>Sort Moves</button>
+}
+
+function ClearMoves({ onClearClick }) {
+  return <button onClick={onClearClick}>Clear Moves</button>
 }
 
 function calculateWinner(squares) {
