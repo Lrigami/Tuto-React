@@ -9,7 +9,8 @@ export default function Game() {
   const currentSquares = history[currentMove];
   const [sorting, setSorting] = useState(false);
 
-  function handlePlay(nextSquares) {
+  function handlePlay(nextSquares, clickedIndex, clickedValue) {
+    console.log(clickedIndex, clickedValue);
     const nextHistory = [...history.slice(0, currentMove + 1), nextSquares];
     setHistory(nextHistory);
     // setHistory([...history, nextSquares]); --- [...history, nextSquares] crée un nouveau tableau qui contient tous les éléments existants de history, suivis de nextSquares.
@@ -39,6 +40,7 @@ export default function Game() {
           // Pour chaque coup de l'historique de la partie, on crée un élément de liste <li> qui contient un bouton <button> qui a un gestionnaire onClick qui appelle la fonction jumpTo.
           <li key={move}>
             <button onClick={() => jumpTo(move)}>{description}</button>
+            <span>{} - {}</span>
           </li>
           // Quand la liste est ré-affichée, React prend la clé de chaque élément de liste et recherche l'élément de la liste précédente avec la même clé. S'il ne la trouve pas, React crée un composant. Si la liste à jour n'a pas une clé qui existait auparavant, React détruit l'ancien composant correspondant. Si deux clés correspondent, le composant correspondant est déplacé si besoin.
           // Les clés informent React sur l'identité de chaque composant, ce qui lui permet de maintenir l'état d'un rendu à l'autre. Si la clé d'un composant change, il sera détruit puis recréé avec un état réinitialisé. 
@@ -104,10 +106,11 @@ function Board({ xIsNext, squares, onPlay, winningSquares }) {
     // nextSquares[i] = "X"; --- met à jour le tableau nextSquares pour ajouter un X à la première case (index [i])
 
     // Si c'est au tour de X, la cellule se remplira d'un X, sinon d'un O.
+    let value;
     if (xIsNext) {
-      nextSquares[i] = "X";
+      value = "X";
     } else {
-      nextSquares[i] = "O";
+      value = "O";
     }
 
     // setSquares(nextSquares); --- On appelle alors la fonction setSquares pour avertir React que l'état du composant a changé. Cela déclenchera un nouvel affichage des composants qui utilisent l'état squares (donc Board), ainsi que de tous leurs comportants enfants (les composants Square qui consituent le plateau);
@@ -117,9 +120,9 @@ function Board({ xIsNext, squares, onPlay, winningSquares }) {
 
     // setXIsNext(!xIsNext); --- On inverse la valeur de xIsNext pour alterner X et O.
 
-    onPlay(nextSquares); // On remplace ici les appels à setSquares et setXIsNext par un appel unique à onPlay pour que le composant Game puisse mettre à jour le Board lorsque l'utilisateur clique sur une case.
+    nextSquares[i] = value;
+    onPlay(nextSquares, i, value); // On remplace ici les appels à setSquares et setXIsNext par un appel unique à onPlay pour que le composant Game puisse mettre à jour le Board lorsque l'utilisateur clique sur une case.
     setCount(count + 1);
-    console.log(count);
   }
 
   // Remarque : JavaScript utilise des fermetures lexicales, ce qui signifie qu'une fonction imbriquée (ex. handleClick) a accès aux variables et fonctions définies dans une fonction englobante (ex. Board). La fonction handleClick peut lire l'état squares et appeler la fonction setSquares parce que les deux sont définis dans la fonction Board.
@@ -128,7 +131,7 @@ function Board({ xIsNext, squares, onPlay, winningSquares }) {
   let status;
   if (winner) {
     status = winner + " a gagné";
-  } else if (!winner && count == 9) {
+  } else if (!winner && count == 9) { // Announce si c'est un match nul
     status = "Match nul !";
   } else {
     status = "Prochain tour : " + (xIsNext ? "X" : "O");
