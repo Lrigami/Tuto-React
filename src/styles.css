@@ -88,3 +88,8 @@ body {
 .game-info {
   margin-left: 20px;
 }
+
+.winner {
+  background-color: lightpink;
+  font-weight: bold;
+}

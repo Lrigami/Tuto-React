@@ -52,6 +52,7 @@ export default function Game() {
 
   const [displayedMoves, setDisplayedMoves] = useState(moves);
 
+  // Permet de faire en sorte que ce soit toujours synchronisé avec moves.
   useEffect(() => {
     setDisplayedMoves(moves);
   }, [history, currentMove]);
@@ -70,10 +71,12 @@ export default function Game() {
     setDisplayedMoves(moves);
   }
 
+  const winningSquares = calculateWinner(currentSquares) || [];
+
   return (
     <div className="game">
       <div className="game-board">
-        <Board xIsNext={xIsNext} squares={currentSquares} onPlay={handlePlay}/>
+        <Board xIsNext={xIsNext} squares={currentSquares} onPlay={handlePlay} winningSquares={winningSquares}/>
       </div>
       <div className="game-info">
         <SortMoves onSortClick={sort}/>
@@ -84,14 +87,17 @@ export default function Game() {
   )
 }
 
-function Board({ xIsNext, squares, onPlay }) {
+function Board({ xIsNext, squares, onPlay, winningSquares }) {
   // déclaration d'une variable d'état nommée squares qui contient par défaut un tableau de 9 null correspondant aux neuf cases. Array(9).fill(null) crée un tableau de neuf éléments puis les définit tous à null. L'appel useState() qui l'enrobe déclare une variable d'état squares qui vaut initialement ce tableau.
   // const [squares, setSquares] = useState(Array(9).fill(null));
 
   function handleClick(i) {
     // Pour ne pas qu'un O puisse écraser un X ou inversement, on vérifie que la valeur de la cellule ne soit pas égale à null. Si elle est remplit alors on arrête la fonction en avance.
     // S'il y a un gagnant, on arrête la fonction également.
-    if (squares[i] || calculateWinner(squares)) {
+    if (squares[i]) {
+      return
+    } else if (calculateWinner(squares)) {
+      
       return;
     }
 
@@ -135,8 +141,9 @@ function Board({ xIsNext, squares, onPlay }) {
           .fill(null)
           .map((_, j) => {
             const index = i * 3 + j;
+            const isWinner = winningSquares.includes(index);
             return (
-              <Square key={index} value={squares[index]} onSquareClick={() => handleClick(index)}/>
+              <Square key={index} value={squares[index]} onSquareClick={() => handleClick(index)} isWinner={isWinner}/>
             );
           })}
       </div>
@@ -174,7 +181,7 @@ function Board({ xIsNext, squares, onPlay }) {
   // );
 }
 
-function Square({value, onSquareClick}) {
+function Square({value, onSquareClick, isWinner}) {
   // value stock la valeur et setValue est une fonction qu'on peut utiliser pour modifier la valeur. Le null passé à useState est utilisé comme valeur initiale de la variable d'état, de sorte que value démarre ici à null.
   // const [value, setValue] = useState(null);
 
@@ -183,7 +190,7 @@ function Square({value, onSquareClick}) {
   // }
 
   // Quand je clique sur le bouton : cela active onSquareClick qui active lui même handleClick(i) dans chaque Square défini dans Board. Voir commentaires dans la fonction handleClick pour les détails. Puis l'état squares du composant Board est mis à jour, du coup Board et tous ses enfants refont leur rendu. Cela modifie la prop value du composant Square d'index i pour la passer de null à X. 
-  return <button className="square" onClick={onSquareClick}>{value}</button>;
+  return <button className={`square ${isWinner ? "winner" : ""}`} onClick={onSquareClick}>{value}</button>;
 }
 
 function SortMoves({ onSortClick }) {
@@ -208,7 +215,7 @@ function calculateWinner(squares) {
   for (let i = 0; i < lines.length; i++) {
     const [a, b, c] = lines[i];
     if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
-      return squares[a];
+      return [a, b, c];
     }
   }
   return null;
