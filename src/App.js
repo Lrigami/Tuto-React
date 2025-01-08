@@ -88,16 +88,14 @@ export default function Game() {
 }
 
 function Board({ xIsNext, squares, onPlay, winningSquares }) {
+  const [count, setCount] = useState(0);
   // déclaration d'une variable d'état nommée squares qui contient par défaut un tableau de 9 null correspondant aux neuf cases. Array(9).fill(null) crée un tableau de neuf éléments puis les définit tous à null. L'appel useState() qui l'enrobe déclare une variable d'état squares qui vaut initialement ce tableau.
   // const [squares, setSquares] = useState(Array(9).fill(null));
 
   function handleClick(i) {
     // Pour ne pas qu'un O puisse écraser un X ou inversement, on vérifie que la valeur de la cellule ne soit pas égale à null. Si elle est remplit alors on arrête la fonction en avance.
     // S'il y a un gagnant, on arrête la fonction également.
-    if (squares[i]) {
-      return
-    } else if (calculateWinner(squares)) {
-      
+    if (squares[i] || calculateWinner(squares)) {
       return;
     }
 
@@ -120,6 +118,8 @@ function Board({ xIsNext, squares, onPlay, winningSquares }) {
     // setXIsNext(!xIsNext); --- On inverse la valeur de xIsNext pour alterner X et O.
 
     onPlay(nextSquares); // On remplace ici les appels à setSquares et setXIsNext par un appel unique à onPlay pour que le composant Game puisse mettre à jour le Board lorsque l'utilisateur clique sur une case.
+    setCount(count + 1);
+    console.log(count);
   }
 
   // Remarque : JavaScript utilise des fermetures lexicales, ce qui signifie qu'une fonction imbriquée (ex. handleClick) a accès aux variables et fonctions définies dans une fonction englobante (ex. Board). La fonction handleClick peut lire l'état squares et appeler la fonction setSquares parce que les deux sont définis dans la fonction Board.
@@ -128,6 +128,8 @@ function Board({ xIsNext, squares, onPlay, winningSquares }) {
   let status;
   if (winner) {
     status = winner + " a gagné";
+  } else if (!winner && count == 9) {
+    status = "Match nul !";
   } else {
     status = "Prochain tour : " + (xIsNext ? "X" : "O");
   }
